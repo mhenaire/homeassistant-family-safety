@@ -82,17 +82,23 @@ class FamilySafetyClient:
         return data.get("members", [])
 
     async def get_children(self) -> list[Child]:
-        """Return Child objects for minor family members (ageGroup == 'NotAdult').
+        """Return Child objects for family members with digital safety (screen time) enabled."""
+        import logging
+        _LOGGER = logging.getLogger(__name__)
 
-        Adult members are excluded even if their role is 'User' — the schedule
-        write endpoint returns 500 for adult accounts.
-        """
         members = await self.get_roster()
         children = []
         for m in members:
             user = m.get("user", {})
-            # Only include minor (child) accounts
-            if user.get("ageGroup", "").lower() != "notadult":
+            age_group = user.get("ageGroup", "")
+            first_name = user.get("firstName", "")
+            _LOGGER.debug(
+                "Roster member: name=%r ageGroup=%r id=%r",
+                first_name, age_group, m.get("id") or user.get("id"),
+            )
+            # Only include members with digital safety (screen time) enabled
+            if not m.get("isDigitalSafetyEnabled"):
+                _LOGGER.debug("Skipping %r (isDigitalSafetyEnabled=%r)", first_name, m.get("isDigitalSafetyEnabled"))
                 continue
             # user id is at top level as "id"
             puid = m.get("id") or user.get("id")
@@ -100,8 +106,8 @@ class FamilySafetyClient:
                 continue
             children.append(Child(
                 user_id=str(puid),
-                first_name=user.get("firstName", ""),
-                display_name=user.get("safeDisplayName") or user.get("firstName", ""),
+                first_name=first_name,
+                display_name=user.get("safeDisplayName") or first_name,
                 _client=self,
             ))
         return children

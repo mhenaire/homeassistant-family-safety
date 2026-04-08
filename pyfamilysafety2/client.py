@@ -82,17 +82,13 @@ class FamilySafetyClient:
         return data.get("members", [])
 
     async def get_children(self) -> list[Child]:
-        """Return Child objects for minor family members (ageGroup == 'NotAdult').
-
-        Adult members are excluded even if their role is 'User' — the schedule
-        write endpoint returns 500 for adult accounts.
-        """
+        """Return Child objects for family members with digital safety (screen time) enabled."""
         members = await self.get_roster()
         children = []
         for m in members:
             user = m.get("user", {})
-            # Only include minor (child) accounts
-            if user.get("ageGroup", "").lower() != "notadult":
+            # Only include members with digital safety (screen time) enabled
+            if not m.get("isDigitalSafetyEnabled"):
                 continue
             # user id is at top level as "id"
             puid = m.get("id") or user.get("id")
