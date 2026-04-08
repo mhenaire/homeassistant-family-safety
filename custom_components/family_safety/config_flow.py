@@ -12,9 +12,9 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from pyfamilysafety2 import FamilySafety
-from pyfamilysafety2.auth import DeviceCodeInfo
-from pyfamilysafety2.exceptions import AuthPendingError, AuthExpiredError, AuthError
+from .pyfamilysafety2 import FamilySafety
+from .pyfamilysafety2.auth import DeviceCodeInfo
+from .pyfamilysafety2.exceptions import AuthPendingError, AuthExpiredError, AuthError
 
 from .const import DOMAIN
 

@@ -16,7 +16,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from pyfamilysafety2.exceptions import APIError
+from .pyfamilysafety2.exceptions import APIError
 
 from .const import (
     DOMAIN,

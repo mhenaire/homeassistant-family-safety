@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "documentation": "https://github.com/mhenaire/homeassistant-family-safety",
   "issue_tracker": "https://github.com/mhenaire/homeassistant-family-safety/issues",
-  "requirements": ["pyfamilysafety2>=1.0.0"],
+  "requirements": [],
   "dependencies": [],
   "codeowners": ["@mhenaire"],
   "iot_class": "cloud_polling",

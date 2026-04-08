@@ -8,8 +8,8 @@ from datetime import timedelta
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from pyfamilysafety2 import FamilySafety, Child, WeekSchedule
-from pyfamilysafety2.exceptions import APIError, AuthExpiredError
+from .pyfamilysafety2 import FamilySafety, Child, WeekSchedule
+from .pyfamilysafety2.exceptions import APIError, AuthExpiredError
 
 from .const import DOMAIN, UPDATE_INTERVAL
 

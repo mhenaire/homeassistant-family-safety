@@ -10,8 +10,8 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from pyfamilysafety2 import FamilySafety
-from pyfamilysafety2.exceptions import AuthExpiredError, APIError
+from .pyfamilysafety2 import FamilySafety
+from .pyfamilysafety2.exceptions import AuthExpiredError, APIError
 
 from .const import DOMAIN, PLATFORMS
 from .coordinator import FamilySafetyCoordinator
