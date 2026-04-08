@@ -2,17 +2,13 @@
   "config": {
     "step": {
       "user": {
-        "title": "Microsoft Family Safety",
-        "description": "Connecting to Microsoft Family Safety..."
-      },
-      "auth": {
         "title": "Authorize Family Safety",
         "description": "Go to **{url}** on any device and enter the code **{code}**.\n\nThe code expires in {expires_in} minutes. Click Submit once you have approved it."
       }
     },
     "error": {
       "auth_pending": "Not yet approved — please visit the URL and enter the code, then click Submit.",
-      "auth_expired": "The code has expired. Please restart the setup.",
+      "auth_expired": "The code has expired. A new code has been generated — please try again.",
       "auth_failed": "Authentication failed. Please try again."
     },
     "abort": {

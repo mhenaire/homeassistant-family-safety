@@ -32,26 +32,11 @@ class FamilySafetyConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Step 1: Show the device code to the user."""
-        session = async_get_clientsession(self.hass)
-
-        # Request a new device code
-        try:
-            self._device_code_info = await FamilySafety.start_device_auth(session)
-        except AuthError as err:
-            _LOGGER.error("Failed to start device auth: %s", err)
-            return self.async_abort(reason="auth_failed")
-
-        return await self.async_step_auth()
-
-    async def async_step_auth(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Step 2: Wait for user to approve the device code, then submit."""
+        """Start device code flow and show the code to the user."""
         errors: dict[str, str] = {}
         session = async_get_clientsession(self.hass)
 
-        if user_input is not None:
+        if user_input is not None and self._device_code_info is not None:
             # User clicked Submit — try to get the token
             try:
                 fs = await FamilySafety.poll_device_auth(
@@ -66,12 +51,21 @@ class FamilySafetyConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "auth_pending"
             except AuthExpiredError:
                 errors["base"] = "auth_expired"
+                self._device_code_info = None
             except AuthError:
                 errors["base"] = "auth_failed"
 
+        # Fetch a new device code if we don't have one (or it expired)
+        if self._device_code_info is None:
+            try:
+                self._device_code_info = await FamilySafety.start_device_auth(session)
+            except AuthError as err:
+                _LOGGER.error("Failed to start device auth: %s", err)
+                return self.async_abort(reason="auth_failed")
+
         info = self._device_code_info
         return self.async_show_form(
-            step_id="auth",
+            step_id="user",
             data_schema=vol.Schema({}),
             description_placeholders={
                 "url": info.verification_uri,
@@ -80,6 +74,12 @@ class FamilySafetyConfigFlow(ConfigFlow, domain=DOMAIN):
             },
             errors=errors,
         )
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Re-authentication step when tokens expire."""
+        return await self.async_step_user(user_input)
 
     async def async_step_reauth(
         self, user_input: dict[str, Any] | None = None
