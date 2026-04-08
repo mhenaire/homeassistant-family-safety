@@ -1,0 +1,77 @@
+set_allowance:
+  name: Set Screen Time Allowance
+  description: Set the screen time allowance for a child on a given day.
+  fields:
+    child:
+      name: Child
+      description: The child's first name (e.g. Felix).
+      required: true
+      example: Felix
+      selector:
+        text:
+    day:
+      name: Day
+      description: Day of the week (e.g. monday) or 'today'. Defaults to today.
+      required: false
+      default: today
+      example: monday
+      selector:
+        select:
+          options:
+            - today
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
+    minutes:
+      name: Minutes
+      description: Screen time allowance in minutes. Use 0 to block entirely.
+      required: true
+      example: 60
+      selector:
+        number:
+          min: 0
+          max: 1440
+          unit_of_measurement: min
+
+add_allowance:
+  name: Add Screen Time
+  description: Add (or subtract) minutes from a child's screen time allowance on a given day.
+  fields:
+    child:
+      name: Child
+      description: The child's first name (e.g. Felix).
+      required: true
+      example: Felix
+      selector:
+        text:
+    day:
+      name: Day
+      description: Day of the week (e.g. monday) or 'today'. Defaults to today.
+      required: false
+      default: today
+      example: monday
+      selector:
+        select:
+          options:
+            - today
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
+    minutes:
+      name: Minutes
+      description: Minutes to add (use negative to reduce).
+      required: true
+      example: 30
+      selector:
+        number:
+          min: -1440
+          max: 1440
+          unit_of_measurement: min

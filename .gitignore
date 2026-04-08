@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+.venv/
+*.egg
+
+# Tokens & secrets — NEVER commit these
+*.json.secret
+tokens.json
+mbi_tokens.json
+*_tokens.json
+.env
+.env.*
+
+# Test / temp
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Playwright
+.playwright-mcp/
+
+# macOS
+.DS_Store
