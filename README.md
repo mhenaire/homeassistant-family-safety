@@ -70,12 +70,13 @@ data:
 
 ### `family_safety.add_allowance`
 
-Add (or subtract) minutes from today's allowance.
+Add (or subtract) minutes from a child's allowance on a given day.
 
 ```yaml
 service: family_safety.add_allowance
 data:
   child: Felix
+  day: today       # or monday, tuesday, etc. Defaults to today.
   minutes: 30      # use negative to reduce
 ```
 
@@ -116,41 +117,6 @@ automation:
           child: Felix
           day: today
           minutes: 0
-```
-
----
-
-## Library Usage (`pyfamilysafety2`)
-
-```python
-import asyncio
-import aiohttp
-from pyfamilysafety2 import FamilySafety
-
-async def main():
-    async with aiohttp.ClientSession() as session:
-        # First time: device code flow
-        code = await FamilySafety.start_device_auth(session)
-        print(f"Go to {code.verification_uri} and enter {code.user_code}")
-        fs = await FamilySafety.wait_for_device_auth(session, code)
-        tokens = fs.get_tokens()
-        # Save tokens somewhere for next time
-
-        # Get children
-        children = await fs.get_children()
-        felix = children["Felix"]
-
-        # Read schedule
-        schedule = await felix.get_schedule()
-        print(schedule)
-
-        # Add 30 min today
-        await felix.add_allowance_today(minutes=30)
-
-        # Set Monday to 1 hour
-        await felix.set_allowance("monday", minutes=60)
-
-asyncio.run(main())
 ```
 
 ---
