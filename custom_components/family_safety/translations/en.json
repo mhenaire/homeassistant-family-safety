@@ -1,0 +1,68 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Microsoft Family Safety",
+        "description": "Connecting to Microsoft Family Safety..."
+      },
+      "auth": {
+        "title": "Authorize Family Safety",
+        "description": "Go to **{url}** on any device and enter the code **{code}**.\n\nThe code expires in {expires_in} minutes. Click Submit once you have approved it."
+      }
+    },
+    "error": {
+      "auth_pending": "Not yet approved — please visit the URL and enter the code, then click Submit.",
+      "auth_expired": "The code has expired. Please restart the setup.",
+      "auth_failed": "Authentication failed. Please try again."
+    },
+    "abort": {
+      "already_configured": "Microsoft Family Safety is already configured.",
+      "auth_failed": "Authentication failed. Please try again."
+    }
+  },
+  "entity": {
+    "sensor": {
+      "windows_allowance": {
+        "name": "Windows Screen Time Allowance"
+      }
+    }
+  },
+  "services": {
+    "set_allowance": {
+      "name": "Set Screen Time Allowance",
+      "description": "Set the screen time allowance for a child on a given day.",
+      "fields": {
+        "child": {
+          "name": "Child",
+          "description": "The child's first name (e.g. Felix)."
+        },
+        "day": {
+          "name": "Day",
+          "description": "Day of the week (e.g. monday) or 'today'. Defaults to today."
+        },
+        "minutes": {
+          "name": "Minutes",
+          "description": "Screen time allowance in minutes. Use 0 to block entirely."
+        }
+      }
+    },
+    "add_allowance": {
+      "name": "Add Screen Time",
+      "description": "Add (or subtract) minutes from a child's screen time allowance on a given day.",
+      "fields": {
+        "child": {
+          "name": "Child",
+          "description": "The child's first name (e.g. Felix)."
+        },
+        "day": {
+          "name": "Day",
+          "description": "Day of the week (e.g. monday) or 'today'. Defaults to today."
+        },
+        "minutes": {
+          "name": "Minutes",
+          "description": "Minutes to add (use negative to reduce)."
+        }
+      }
+    }
+  }
+}
