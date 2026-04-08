@@ -30,7 +30,7 @@ Manage your children's **Windows screen time** directly from Home Assistant — 
 
 During setup, you'll be shown a code and a URL:
 
-> Go to **https://microsoft.com/link** and enter code **K8ZP3C7Y**
+> Go to **https://microsoft.com/link** and enter code **XXXXXXXX**
 
 Open that URL on any device (phone, computer), sign in with the **family organizer's** Microsoft account, and click Approve. That's it.
 
