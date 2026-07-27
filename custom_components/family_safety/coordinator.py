@@ -43,7 +43,21 @@ class FamilySafetyCoordinator(DataUpdateCoordinator):
         for name, child in children.items():
             try:
                 schedule = await child.get_schedule()
-                data[name] = {"child": child, "schedule": schedule}
+                entry = {"child": child, "schedule": schedule}
+                # Usage (activity report) is optional — it only populates when
+                # activity reporting is enabled, so failures here shouldn't drop
+                # the schedule data.
+                try:
+                    entry["usage"] = await child.get_weekly_usage()
+                except APIError as usage_err:
+                    _LOGGER.debug("No usage data for %s: %s", name, usage_err)
+                    # Preserve previous usage if we had it
+                    prev = self.children.get(name)
+                    if prev and prev.get("usage") is not None:
+                        entry["usage"] = prev["usage"]
+                    else:
+                        entry["usage"] = None
+                data[name] = entry
             except APIError as err:
                 _LOGGER.warning("Failed to fetch schedule for %s: %s", name, err)
                 # Keep stale data if available

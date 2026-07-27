@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
 from datetime import time as dtime
 from typing import Any
 from urllib.parse import urlencode
@@ -11,7 +11,7 @@ import aiohttp
 
 from .auth import Authenticator
 from .exceptions import APIError, AuthExpiredError
-from .models import Child, WeekSchedule
+from .models import Child, WeekSchedule, WeeklyUsage
 
 _BASE_URL = "https://mobileaggregator.family.microsoft.com/api"
 _USER_AGENT = "iOS/26.4 iPhone17,1"
@@ -134,6 +134,50 @@ class FamilySafetyClient:
             raise APIError(200, "No Windows schedule found in response")
 
         return WeekSchedule._from_api(windows_schedule.get("dailyRestrictions", {}))
+
+    async def get_screentime_usage(
+        self,
+        user_id: str,
+        *,
+        days: int = 7,
+        platform: str = "ALL",
+        device_count: int = 10,
+    ) -> WeeklyUsage:
+        """Fetch screen time *usage* (activity report) for a child.
+
+        Returns per-day used minutes plus totals for the last ``days`` days
+        (including today). The Family Safety API only allows a range of up to
+        7 days, so ``days`` must be between 1 and 7.
+
+        Note: this is activity-report data (actual device screen time used),
+        which is distinct from the configured allowance/schedule. It only
+        populates when activity reporting is enabled for the child.
+        """
+        if not 1 <= days <= 7:
+            raise ValueError("days must be between 1 and 7 (API limit)")
+
+        now = datetime.now(timezone.utc)
+        begin = (now - timedelta(days=days - 1)).replace(
+            hour=0, minute=0, second=0, microsecond=0
+        )
+        begin_str = begin.strftime("%Y-%m-%dT%H:%M:%S") + "+00:00"
+        end_str = now.strftime("%Y-%m-%dT%H:%M:%S") + "+00:00"
+
+        params = {
+            "beginTime": begin_str,
+            "endTime": end_str,
+            "topDeviceCount": str(device_count),
+        }
+        data = await self._request(
+            "GET",
+            f"v4/activityreport/deviceScreenTimeUsage/{user_id}",
+            params=params,
+            plat_info=platform,
+        )
+        if data is None:
+            raise APIError(200, f"No usage data returned for user {user_id}")
+
+        return WeeklyUsage._from_api(data)
 
     async def patch_schedule(
         self,

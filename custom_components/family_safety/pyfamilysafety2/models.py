@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from datetime import time
+from datetime import date, time
 from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
@@ -111,6 +111,79 @@ class WeekSchedule:
 
 
 @dataclass
+class DayUsage:
+    """Actual screen time used on a single day (from the activity report)."""
+
+    day: date
+    """The calendar date this usage applies to."""
+
+    used_minutes: int
+    """Total device screen time used on this day, in minutes."""
+
+    @property
+    def day_name(self) -> str:
+        """Lowercase weekday name (e.g. 'monday')."""
+        return self.day.strftime("%A").lower()
+
+    @classmethod
+    def _from_api(cls, data: dict) -> "DayUsage":
+        raw_date = data.get("date", "")
+        try:
+            parsed = date.fromisoformat(raw_date[:10])
+        except ValueError:
+            parsed = date.today()
+        return cls(
+            day=parsed,
+            used_minutes=int(data.get("timeUsed", 0)) // _MS_PER_MINUTE,
+        )
+
+
+@dataclass
+class WeeklyUsage:
+    """Actual screen time usage over a rolling window (default last 7 days).
+
+    Built from the ``deviceScreenTimeUsage`` activity report. This reflects
+    real device usage, not the configured allowance/schedule.
+    """
+
+    days: list[DayUsage] = field(default_factory=list)
+    """Per-day usage, ordered oldest to newest."""
+
+    total_minutes: int = 0
+    """Total screen time used across the whole window, in minutes."""
+
+    daily_average_minutes: int = 0
+    """Average daily screen time reported by the API, in minutes."""
+
+    @property
+    def total_hours(self) -> float:
+        """Total usage in hours (float)."""
+        return self.total_minutes / 60
+
+    def __repr__(self) -> str:
+        return (
+            f"WeeklyUsage(total={self.total_minutes}min, "
+            f"avg={self.daily_average_minutes}min/day, days={len(self.days)})"
+        )
+
+    @classmethod
+    def _from_api(cls, data: dict) -> "WeeklyUsage":
+        days = [
+            DayUsage._from_api(d)
+            for d in data.get("dailyDeviceUsage", [])
+        ]
+        days.sort(key=lambda d: d.day)
+        aggregates = data.get("deviceUsageAggregates", {}) or {}
+        total_ms = int(aggregates.get("totalScreenTime", 0) or 0)
+        avg_ms = int(aggregates.get("dailyAverage", 0) or 0)
+        return cls(
+            days=days,
+            total_minutes=total_ms // _MS_PER_MINUTE,
+            daily_average_minutes=avg_ms // _MS_PER_MINUTE,
+        )
+
+
+@dataclass
 class Child:
     """A child (non-admin family member) with screen time management."""
 
@@ -131,6 +204,10 @@ class Child:
     async def get_schedule(self) -> WeekSchedule:
         """Fetch the current Windows screen time schedule for this child."""
         return await self._client.get_schedule(self.user_id)
+
+    async def get_weekly_usage(self, *, days: int = 7) -> WeeklyUsage:
+        """Fetch actual screen time usage for the last ``days`` days (max 7)."""
+        return await self._client.get_screentime_usage(self.user_id, days=days)
 
     async def set_allowance(
         self,

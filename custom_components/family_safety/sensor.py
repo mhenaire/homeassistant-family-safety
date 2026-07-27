@@ -57,6 +57,8 @@ async def async_setup_entry(
     entities = []
     for child_name in coordinator.data:
         entities.append(ScreenTimeAllowanceSensor(coordinator, child_name))
+        entities.append(ScreenTimeUsedSensor(coordinator, child_name))
+        entities.append(ScreenTimeUsedTodaySensor(coordinator, child_name))
 
     async_add_entities(entities)
 
@@ -147,3 +149,115 @@ class ScreenTimeAllowanceSensor(CoordinatorEntity, SensorEntity):
             attrs[f"{day_schedule.day}_window_start"] = day_schedule.window_start.strftime("%H:%M")
             attrs[f"{day_schedule.day}_window_end"] = day_schedule.window_end.strftime("%H:%M")
         return attrs
+
+
+class ScreenTimeUsedSensor(CoordinatorEntity, SensorEntity):
+    """Sensor showing actual screen time used over the last 7 days.
+
+    The state is the total minutes used in the rolling 7-day window. Per-day
+    usage is exposed as attributes (both a ``daily`` list keyed by date and
+    convenient ``<weekday>_used_minutes`` keys) so it can drive a histogram
+    chart in the dashboard.
+    """
+
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:chart-bar"
+    _attr_has_entity_name = True
+    _attr_translation_key = "screen_time_used"
+
+    def __init__(self, coordinator: FamilySafetyCoordinator, child_name: str) -> None:
+        super().__init__(coordinator)
+        self._child_name = child_name
+        self._attr_unique_id = f"family_safety_{child_name.lower()}_screen_time_used"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, child_name.lower())},
+            name=child_name,
+            manufacturer="Microsoft",
+            model="Family Safety",
+        )
+
+    @property
+    def native_value(self) -> int | None:
+        data = self.coordinator.data.get(self._child_name)
+        if not data:
+            return None
+        usage = data.get("usage")
+        if usage is None:
+            return None
+        return usage.total_minutes
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        data = self.coordinator.data.get(self._child_name)
+        if not data:
+            return {}
+        usage = data.get("usage")
+        if usage is None:
+            return {}
+        attrs: dict = {
+            "daily_average_minutes": usage.daily_average_minutes,
+            "total_hours": round(usage.total_hours, 2),
+            "days_in_range": len(usage.days),
+        }
+        daily = []
+        for day_usage in usage.days:
+            iso = day_usage.day.isoformat()
+            daily.append({"date": iso, "minutes": day_usage.used_minutes})
+            attrs[f"{day_usage.day_name}_used_minutes"] = day_usage.used_minutes
+        attrs["daily"] = daily
+        return attrs
+
+
+class ScreenTimeUsedTodaySensor(CoordinatorEntity, SensorEntity):
+    """Sensor showing actual screen time used so far today (in minutes).
+
+    Reuses the weekly usage data already fetched by the coordinator (no extra
+    API call) and picks out today's entry.
+    """
+
+    _attr_device_class = SensorDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.MINUTES
+    _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_icon = "mdi:timer-sand"
+    _attr_has_entity_name = True
+    _attr_translation_key = "screen_time_used_today"
+
+    def __init__(self, coordinator: FamilySafetyCoordinator, child_name: str) -> None:
+        super().__init__(coordinator)
+        self._child_name = child_name
+        self._attr_unique_id = f"family_safety_{child_name.lower()}_screen_time_used_today"
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, child_name.lower())},
+            name=child_name,
+            manufacturer="Microsoft",
+            model="Family Safety",
+        )
+
+    def _today_usage(self):
+        data = self.coordinator.data.get(self._child_name)
+        if not data:
+            return None
+        usage = data.get("usage")
+        if usage is None:
+            return None
+        today = datetime.now().date()
+        for day_usage in usage.days:
+            if day_usage.day == today:
+                return day_usage
+        return None
+
+    @property
+    def native_value(self) -> int | None:
+        day_usage = self._today_usage()
+        if day_usage is None:
+            return None
+        return day_usage.used_minutes
+
+    @property
+    def extra_state_attributes(self) -> dict:
+        day_usage = self._today_usage()
+        if day_usage is None:
+            return {}
+        return {"date": day_usage.day.isoformat()}

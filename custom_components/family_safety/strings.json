@@ -20,6 +20,12 @@
     "sensor": {
       "windows_allowance": {
         "name": "Windows Screen Time Allowance"
+      },
+      "screen_time_used": {
+        "name": "Screen Time Used (7 Days)"
+      },
+      "screen_time_used_today": {
+        "name": "Screen Time Used Today"
       }
     }
   },
