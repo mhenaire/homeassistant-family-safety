@@ -111,6 +111,7 @@ class ScreenTimeAllowanceSensor(CoordinatorEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 0
     _attr_icon = "mdi:timer-outline"
     _attr_has_entity_name = True
     _attr_translation_key = "windows_allowance"
@@ -163,6 +164,7 @@ class ScreenTimeUsedSensor(CoordinatorEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 0
     _attr_icon = "mdi:chart-bar"
     _attr_has_entity_name = True
     _attr_translation_key = "screen_time_used"
@@ -220,6 +222,7 @@ class ScreenTimeUsedTodaySensor(CoordinatorEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.DURATION
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
     _attr_state_class = SensorStateClass.MEASUREMENT
+    _attr_suggested_display_precision = 0
     _attr_icon = "mdi:timer-sand"
     _attr_has_entity_name = True
     _attr_translation_key = "screen_time_used_today"
