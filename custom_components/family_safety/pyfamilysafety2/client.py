@@ -20,10 +20,17 @@ _CULTURE = "en-us"
 _MS_PER_MINUTE = 60_000
 
 
+def _format_iso_offset(dt: datetime) -> str:
+    """Format datetime as ISO 8601 with colon in UTC offset (+HH:MM)."""
+    if dt.tzinfo is None:
+        dt = dt.astimezone()
+    offset_str = dt.strftime("%z")
+    return dt.strftime("%Y-%m-%dT%H:%M:%S") + offset_str[:3] + ":" + offset_str[3:]
+
+
 def _now_iso() -> str:
     """Current local time as ISO 8601 with UTC offset, as expected by the API."""
-    now = datetime.now().astimezone()
-    return now.strftime("%Y-%m-%dT%H:%M:%S") + now.strftime("%z")[:3] + ":" + now.strftime("%z")[3:]
+    return _format_iso_offset(datetime.now().astimezone())
 
 
 class FamilySafetyClient:
@@ -142,6 +149,7 @@ class FamilySafetyClient:
         days: int = 7,
         platform: str = "ALL",
         device_count: int = 10,
+        tz: Any | None = None,
     ) -> WeeklyUsage:
         """Fetch screen time *usage* (activity report) for a child.
 
@@ -156,12 +164,14 @@ class FamilySafetyClient:
         if not 1 <= days <= 7:
             raise ValueError("days must be between 1 and 7 (API limit)")
 
-        now = datetime.now(timezone.utc)
+        now = datetime.now(tz) if tz is not None else datetime.now().astimezone()
+        if now.tzinfo is None:
+            now = now.astimezone()
         begin = (now - timedelta(days=days - 1)).replace(
             hour=0, minute=0, second=0, microsecond=0
         )
-        begin_str = begin.strftime("%Y-%m-%dT%H:%M:%S") + "+00:00"
-        end_str = now.strftime("%Y-%m-%dT%H:%M:%S") + "+00:00"
+        begin_str = _format_iso_offset(begin)
+        end_str = _format_iso_offset(now)
 
         params = {
             "beginTime": begin_str,

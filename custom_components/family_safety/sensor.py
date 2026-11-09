@@ -15,6 +15,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .pyfamilysafety2.exceptions import APIError
 
@@ -132,7 +133,7 @@ class ScreenTimeAllowanceSensor(CoordinatorEntity, SensorEntity):
         data = self.coordinator.data.get(self._child_name)
         if not data:
             return None
-        today = datetime.now().strftime("%A").lower()
+        today = dt_util.now().strftime("%A").lower()
         try:
             return data["schedule"][today].allowance_minutes
         except KeyError:
@@ -245,7 +246,7 @@ class ScreenTimeUsedTodaySensor(CoordinatorEntity, SensorEntity):
         usage = data.get("usage")
         if usage is None:
             return None
-        today = datetime.now().date()
+        today = dt_util.now().date()
         for day_usage in usage.days:
             if day_usage.day == today:
                 return day_usage
@@ -253,14 +254,17 @@ class ScreenTimeUsedTodaySensor(CoordinatorEntity, SensorEntity):
 
     @property
     def native_value(self) -> int | None:
+        data = self.coordinator.data.get(self._child_name)
+        if not data or data.get("usage") is None:
+            return None
         day_usage = self._today_usage()
         if day_usage is None:
-            return None
+            return 0
         return day_usage.used_minutes
 
     @property
     def extra_state_attributes(self) -> dict:
         day_usage = self._today_usage()
         if day_usage is None:
-            return {}
+            return {"date": dt_util.now().date().isoformat()}
         return {"date": day_usage.day.isoformat()}

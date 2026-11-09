@@ -1,7 +1,7 @@
 {
   "domain": "family_safety",
   "name": "Microsoft Family Safety",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "documentation": "https://github.com/mhenaire/homeassistant-family-safety",
   "issue_tracker": "https://github.com/mhenaire/homeassistant-family-safety/issues",
   "requirements": [],

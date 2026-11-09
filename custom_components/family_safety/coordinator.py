@@ -7,6 +7,7 @@ from datetime import timedelta
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .pyfamilysafety2 import FamilySafety, Child, WeekSchedule
 from .pyfamilysafety2.exceptions import APIError, AuthExpiredError
@@ -48,7 +49,9 @@ class FamilySafetyCoordinator(DataUpdateCoordinator):
                 # activity reporting is enabled, so failures here shouldn't drop
                 # the schedule data.
                 try:
-                    entry["usage"] = await child.get_weekly_usage()
+                    entry["usage"] = await child.get_weekly_usage(
+                        tz=dt_util.get_default_time_zone()
+                    )
                 except APIError as usage_err:
                     _LOGGER.debug("No usage data for %s: %s", name, usage_err)
                     # Preserve previous usage if we had it

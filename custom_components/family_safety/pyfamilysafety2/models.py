@@ -205,9 +205,14 @@ class Child:
         """Fetch the current Windows screen time schedule for this child."""
         return await self._client.get_schedule(self.user_id)
 
-    async def get_weekly_usage(self, *, days: int = 7) -> WeeklyUsage:
+    async def get_weekly_usage(
+        self,
+        *,
+        days: int = 7,
+        tz: Any | None = None,
+    ) -> WeeklyUsage:
         """Fetch actual screen time usage for the last ``days`` days (max 7)."""
-        return await self._client.get_screentime_usage(self.user_id, days=days)
+        return await self._client.get_screentime_usage(self.user_id, days=days, tz=tz)
 
     async def set_allowance(
         self,
@@ -253,7 +258,7 @@ class Child:
     ) -> None:
         """Set the screen time allowance for today."""
         from datetime import datetime
-        today = datetime.now().strftime("%A").lower()
+        today = datetime.now().astimezone().strftime("%A").lower()
         await self.set_allowance(
             today, minutes=minutes, window_start=window_start, window_end=window_end
         )
@@ -280,5 +285,5 @@ class Child:
             minutes: Minutes to add (can be negative to reduce).
         """
         from datetime import datetime
-        today = datetime.now().strftime("%A").lower()
+        today = datetime.now().astimezone().strftime("%A").lower()
         await self.add_allowance(today, minutes=minutes)
